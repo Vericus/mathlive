@@ -120,8 +120,9 @@ declare global {
 // Note: the `position: relative` is required to fix https://github.com/arnog/mathlive/issues/971
 //
 
-const MATHFIELD_TEMPLATE = document.createElement('template');
-MATHFIELD_TEMPLATE.innerHTML = `<style>
+const createMathfieldTemplate = () => {
+  const template = document.createElement('template');
+  template.innerHTML = `<style>
 :host { display: block; position: relative; overflow: hidden auto;}
 :host([hidden]) { display: none; }
 :host([disabled]) { opacity:  .5; }
@@ -132,6 +133,8 @@ MATHFIELD_TEMPLATE.innerHTML = `<style>
 :host([readonly]), :host([read-only]) { outline: none; }
 </style>
 <div></div><slot style="display:none"></slot>`;
+  return template;
+};
 
 //
 // Deferred State
@@ -646,7 +649,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     super();
 
     this.attachShadow({ mode: 'open' });
-    this.shadowRoot!.append(MATHFIELD_TEMPLATE.content.cloneNode(true));
+    this.shadowRoot!.append(createMathfieldTemplate().content.cloneNode(true));
 
     // When the elements get focused (through tabbing for example)
     // focus the mathfield
