@@ -24,9 +24,8 @@ const TYPESCRIPT_OPTIONS = {
 const SDK_VERSION = pkg.version || 'v?.?.?';
 
 function preamble() {
-  return `/** MathLive ${SDK_VERSION} ${
-    process.env.GIT_VERSION ? ' -- ' + process.env.GIT_VERSION : ''
-  }*/`;
+  return `/** MathLive ${SDK_VERSION} ${process.env.GIT_VERSION ? ' -- ' + process.env.GIT_VERSION : ''
+    }*/`;
 }
 
 const TERSER_OPTIONS = {
@@ -152,6 +151,42 @@ ROLLUP.push({
     format: 'es',
   },
 });
+
+// Standalone convertLatexToMarkup server function
+ROLLUP.push({
+  onwarn(warning, warn) {
+    // The use of #private class variables seem to trigger this warning.
+    if (warning.code === 'THIS_IS_UNDEFINED') return;
+    warn(warning);
+  },
+  input: 'src/convert-latex-to-markup.ts',
+  plugins: [
+    buildProgress(),
+    resolve(),
+    typescript(TYPESCRIPT_OPTIONS),
+  ],
+  output: [
+    // JavaScript native module
+    // (stricly speaking not necessary, since the UMD output is module
+    // compatible, but this gives us a "clean" module)
+    {
+      format: 'es',
+      file: `${BUILD_DIRECTORY}/convert-latex-to-markup.mjs`,
+      sourcemap: !PRODUCTION,
+      exports: 'named',
+      banner: preamble(),
+    },
+    // UMD file, suitable for import, <script> and require()
+    {
+      format: 'umd',
+      name: 'MathLive',
+      file: `${BUILD_DIRECTORY}/convert-latex-to-markup.js`,
+      sourcemap: !PRODUCTION,
+      exports: 'named',
+      banner: preamble(),
+    },
+  ],
+})
 
 if (PRODUCTION) {
   // Minified versions
